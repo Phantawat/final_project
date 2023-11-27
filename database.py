@@ -74,6 +74,12 @@ class Table:
             temps.append(dict_temp)
         return temps
 
+    def insert(self, table):
+        self.table.append(table)
+
+    def update(self, person_id, key, new_entry):
+        pass
+
     def __str__(self):
         return f'{self.table_name}:{str(self.table)}'
 
