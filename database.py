@@ -78,7 +78,17 @@ class Table:
         self.table.append(table)
 
     def update(self, person_id, key, new_entry):
-        pass
+        for item in self.table:
+            if item.get('person_id') == person_id:
+                if key in item:
+                    item[key] = new_entry
+                    print(f"Entry for person_id {person_id} updated successfully.")
+                    return
+                else:
+                    print(f"Key {key} not found in entry for person_id {person_id}.")
+                    return
+        print(f"No entry found for person_id {person_id}.")
+
 
     def __str__(self):
         return f'{self.table_name}:{str(self.table)}'
