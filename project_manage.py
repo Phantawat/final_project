@@ -61,71 +61,48 @@ class Student:
         self.student_id = val[0]
         self.role = val[2]
         self.name = val[1]
+        self.firstname = self.name['first']
+        self.lastname = self.name['last']
         self.projects = []
 
     def student_home(self):
-        print(f"Welcome, {self.role} (Student ID: {self.student_id}, Name: {self.name})")
+        print(f'Welcome, {self.role} (Student ID: {self.student_id}, Name: {self.firstname + " " + self.lastname})')
         if self.role == 'lead':
-            self.lead_menu()
+            LeadStudent.lead_menu(LeadStudent)
         elif self.role == 'member':
             self.member_menu()
-
-    def lead_menu(self):
-        print("Lead Menu:")
-        print("1. Create Project")
-        print("2. Find Members")
-        print("3. Invite Members")
-        print("4. Add Members to Project")
-        print("5. View and Modify Project Details")
-        print("6. Send Request to Advisors")
-        print("7. Submit Final Project Report")
-        choice = input("Enter your choice: ")
-        while True:
-            if choice == '1':
-                self.create_project()
-                break
-            elif choice == '2':
-                self.find_members()
-                break
-            elif choice == '3':
-                self.invite_members()
-                break
-            elif choice == '4':
-                self.add_members()
-                break
-            elif choice == '5':
-                self.view_project_details()
-                break
-            elif choice == '6':
-                self.send_request_to_advisors()
-                break
-            elif choice == '7':
-                self.submit_final_project_report()
-                break
-            print("Invalid choice. Please try again.")
-            choice = input("Enter your choice: ")
+        elif self.role == 'student':
+            print("You're not in any projects.")
+            print('Student Menu:')
+            print('1. Create project')
+            print('2. Respond to an invitation')
+            choice = input('Enter your choice: ')
+            my_db = initializing()
+            person_table = my_db.search('persons')
+            print(person_table)
+            while True:
+                if choice == '1':
+                    person_table.update(self.student_id, 'role', 'lead')
+                    print(self.role)
+                    LeadStudent.create_project(LeadStudent)
+                    break
+                elif choice == '2':
+                    self.respond_to_invitation()
+                    break
+                print('Please try again.')
+                choice = input('Enter your choice: ')
 
     def member_menu(self):
-        print("Member Menu:")
+        print('Member Menu:')
         self.view_project_details()
 
-    def create_project(self):
-        print("Lead: Creating a project")
-
-    def find_members(self):
-        print("Lead: Finding members")
-
-    def invite_members(self):
-        print("Lead: Inviting members")
-
-    def add_members(self):
-        print("Lead: Adding members to the project")
+    def respond_to_invitation(self):
+        pass
 
     def view_project_details(self):
-        print("Viewing and modifying project details")
-
-    def send_request_to_advisors(self):
-        print("Lead: Sending request to advisors")
+        my_db = DB()
+        project_table = my_db.search('Project_table')
+        print(project_table)
 
     def submit_final_project_report(self):
         print("Lead: Submitting final project report")
@@ -136,15 +113,15 @@ class LeadStudent(Student):
         super().__init__(val)
 
     def lead_menu(self):
-        print("Lead Menu:")
-        print("1. Create Project")
-        print("2. Find Members")
-        print("3. Invite Members")
-        print("4. Add Members to Project")
-        print("5. View and Modify Project Details")
-        print("6. Send Request to Advisors")
-        print("7. Submit Final Project Report")
-        choice = input("Enter your choice: ")
+        print('Lead Menu:')
+        print('1. Create Project')
+        print('2. Find Members')
+        print('3. Invite Members')
+        print('4. Add Members to Project')
+        print('5. View and Modify Project Details')
+        print('6. Send Request to Advisors')
+        print('7. Submit Final Project Report')
+        choice = input('Enter your choice: ')
         while True:
             if choice == '1':
                 self.create_project()
@@ -167,11 +144,23 @@ class LeadStudent(Student):
             elif choice == '7':
                 self.submit_final_project_report()
                 break
-            print("Invalid choice. Please try again.")
-            choice = input("Enter your choice: ")
+            print('Please try again.')
+            choice = input('Enter your choice: ')
 
     def invite_members(self):
         print("Lead: Inviting members and forming a group")
+
+    def send_request_to_advisors(self):
+        print("Lead: Sending request to advisors")
+
+    def create_project(self):
+        print("Lead: Creating a project")
+
+    def find_members(self):
+        print("Lead: Finding members")
+
+    def add_members(self):
+        print("Lead: Adding members to the project")
 
 
 class MemberStudent(Student):
@@ -186,19 +175,19 @@ class Faculty:
         self.projects = []
 
     def faculty_home(self):
-        print(f"Welcome, {self.role} (Faculty ID: {self.faculty_id}, Name: {self.name})")
+        print(f'Welcome, {self.role} (Faculty ID: {self.faculty_id}, Name: {self.name})')
         if self.role == 'faculty':
             self.normal_faculty_menu()
         elif self.role == 'advisor':
             self.advisor_menu()
 
     def normal_faculty_menu(self):
-        print("Normal Faculty Menu:")
-        print("1. See Requests to Be a Supervisor")
-        print("2. Send Deny Response")
-        print("3. See Details of All Projects")
-        print("4. Evaluate Projects")
-        choice = input("Enter your choice: ")
+        print('Normal Faculty Menu:')
+        print('1. See Requests to Be a Supervisor')
+        print('2. Send Deny Response')
+        print('3. See Details of All Projects')
+        print('4. Evaluate Projects')
+        choice = input('Enter your choice: ')
         while True:
             if choice == '1':
                 self.see_supervisor_requests()
@@ -212,17 +201,17 @@ class Faculty:
             elif choice == '4':
                 self.evaluate_projects()
                 break
-            print("Please try again.")
-            choice = input("Enter your choice: ")
+            print('Please try again.')
+            choice = input('Enter your choice: ')
 
     def advisor_menu(self):
-        print("Advisor Menu:")
-        print("1. See Requests to Be a Supervisor")
-        print("2. Send Response")
-        print("3. See Details of All Projects")
-        print("4. Evaluate Projects")
-        print("5. Approve Project")
-        choice = input("Enter your choice: ")
+        print('Advisor Menu:')
+        print('1. See Requests to Be a Supervisor')
+        print('2. Send Response')
+        print('3. See Details of All Projects')
+        print('4. Evaluate Projects')
+        print('5. Approve Project')
+        choice = input('Enter your choice: ')
         while True:
             if choice == '1':
                 self.see_supervisor_requests()
@@ -239,8 +228,8 @@ class Faculty:
             elif choice == '5':
                 self.approve_project()
                 break
-            print("Please try again.")
-            choice = input("Enter your choice: ")
+            print('Please try again.')
+            choice = input('Enter your choice: ')
 
     def see_supervisor_requests(self):
         print("Faculty: Seeing requests to be a supervisor")
@@ -262,10 +251,10 @@ class Admin:
         self.my_db = my_db
 
     def admin_home(self):
-        print("Admin Menu:")
-        print("1. Update Database")
-        print("2. Manage User")
-        choice = input("Enter what you are going to do: ")
+        print('Welcome back, Admin Menu:')
+        print('1. Update Database')
+        print('2. Manage User')
+        choice = input('Enter what you are going to do: ')
         while True:
             if choice == '1':
                 self.update_database()
@@ -276,8 +265,8 @@ class Admin:
             elif choice == '3':
                 self.manage_user()
                 break
-            print("Invalid choice. Please try again.")
-            choice = input("Enter what you are going to do: ")
+            print('Please try again.')
+            choice = input("Enter what you're going to do: ")
 
     def update_database(self):
         # Logic to update user information in the database
@@ -293,9 +282,10 @@ class Admin:
 # make calls to the initializing and login functions defined above
 
 initializing()
+my_db = DB()
 val = login()
 student = Student(val)
-admin = Admin()
+admin = Admin(my_db)
 faculty = Faculty(val)
 
 if val[2] == 'admin':
@@ -304,7 +294,7 @@ elif val[2] == 'student':
     student.student_home()
 elif val[2] == 'member':
     student.student_home()
-elif val[2] =='lead':
+elif val[2] == 'lead':
     student.student_home()
 elif val[2] == 'faculty':
     faculty.faculty_home()
