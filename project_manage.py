@@ -28,7 +28,6 @@ def login():
     person_search = my_db.search('persons')
     if login_search:
         print('Welcome to Senior project managing program')
-        print("Login for letting me know who you are :D")
         username = input('Username: ')
         password = input('Password: ')
         while True:
@@ -76,7 +75,7 @@ class Student:
     def student_home(self):
         print(f'Welcome, {self.role} (Student ID: {self.student_id}, Name: {self.firstname + " " + self.lastname})')
         if self.role == 'lead':
-            LeadStudent.lead_menu(LeadStudent)
+            LeadStudent.lead_menu(self)
         elif self.role == 'member':
             self.member_menu()
         elif self.role == 'student':
@@ -87,11 +86,10 @@ class Student:
             choice = input('Enter your choice: ')
             my_db = initializing()
             person_table = my_db.search('persons')
-            print(person_table)
             while True:
                 if choice == '1':
                     person_table.update(self.student_id, 'role', 'lead')
-                    LeadStudent.create_project(LeadStudent)
+                    LeadStudent.create_project(self)
                     break
                 elif choice == '2':
                     self.respond_to_invitation()
@@ -106,10 +104,30 @@ class Student:
     def respond_to_invitation(self):
         pass
 
+    def find_members(self):
+        while True:
+            member_name = input('Enter member first name: ')
+            get_data = my_db.search('persons')
+            get_member = get_data.filter(lambda x: x['first'] == member_name)
+            if len(get_member.table) != 0:
+                print(get_member.table)
+            elif len(get_member.table) == 0:
+                print("Can't find this person.")
+            print('Press (1) continue (2) exit')
+            choice = input('Enter number: ')
+            if choice == '1':
+                continue
+            elif choice == '2':
+                break
+
+    def submit_final_project_report(self):
+        print("Lead: Submitting final project report")
+
 
 class LeadStudent(Student):
     def __init__(self, val):
         super().__init__(val)
+        self.project_id = None
         self.project_table = ProjectTable()
 
     def lead_menu(self):
@@ -133,7 +151,7 @@ class LeadStudent(Student):
                 self.invite_members()
                 break
             elif choice == '4':
-                self.add_members()
+                self.add_members_to_project()
                 break
             elif choice == '5':
                 view_project_details()
@@ -154,18 +172,32 @@ class LeadStudent(Student):
         print("Lead: Sending request to advisors")
 
     def create_project(self):
+        print("Now, you're a project leader.")
+        print('Creating process...')
+        print('Do you know your member ID yet?')
+        ans = input('Yes/No: ')
+        if ans.lower() == 'no':
+            self.find_members()
         title = input("Enter project title: ")
-        self.project_table.add_project(title, self.student_id, '', '', '', '', '')
-        print("Lead: Project created successfully.")
+        lead = input("Enter lead student ID: ")
+        advisor = input("Enter advisor ID: ")
+        lead_student = LeadStudent([lead, {'first': '', 'last': ''}, 'lead'])
+        self.project_id = lead_student.project_table.add_project(title, lead, advisor)
+        lead_student.add_members_to_project()
+        self.projects.append(self.project_id)
+        my_db = initializing()
+        person_table = my_db.search('persons')
+        person_updated = person_table.update(lead, 'type', 'lead')
+        print(f"Role of lead student with ID {lead} updated to 'lead'.")
+        print(self.projects)
+        print(person_updated)
 
-    def find_members(self):
-        print("Lead: Finding members")
-
-    def add_members(self):
-        print("Lead: Adding members to the project")
-
-    def submit_final_project_report(self):
-        print("Lead: Submitting final project report")
+    def add_members_to_project(self):
+        for i in range(1, 5):
+            member_name = input(f"Enter member {i} name (or press Enter to skip): ")
+            if member_name:
+                member_id = self.project_table.add_member(self.project_id['ProjectID'], member_name)
+                print(f"Member {i} added with ID: {member_id}")
 
 
 class MemberStudent(Student):
@@ -245,7 +277,7 @@ class Faculty:
         print("Advisor: Sending accept response")
 
     def evaluate_projects(self, project_id):
-        project = self.project_table.search('projects', project_id)
+        project = my_db.search('projects')
         if project:
             print(f"Project Details:\n{project}")
             evaluation = input("Provide your evaluation comments: ")
@@ -299,20 +331,29 @@ class Admin:
 class ProjectTable(Table):
     def __init__(self):
         super().__init__('projects', [])
+        self.member_id_counter = 0
 
-    def add_project(self, title, lead, member1, member2, member3, member4, advisor):
+    def add_project(self, title, lead, advisor):
         project = {
             'ProjectID': len(self.table) + 1,
             'Title': title,
             'Lead': lead,
-            'Member1': member1,
-            'Member2': member2,
-            'Member3': member3,
-            'Member4': member4,
+            'Members': [],
             'Advisor': advisor,
             'Status': 'Pending'
         }
         self.table.append(project)
+        return project
+
+    def add_member(self, project_id, member_name):
+        project = next((p for p in self.table if p['ProjectID'] == project_id), None)
+        member_search = my_db.search('persons')
+        member_id = member_search.select(['ID'])[0]['ID']
+        if project:
+            project['Members'].append({'ID': member_id.values(), 'Name': member_name})
+            return member_id
+        else:
+            print(f"Project with ID {project_id} not found.")
 
 
 class MemberPendingRequestTable(Table):
