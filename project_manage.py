@@ -242,7 +242,6 @@ class Faculty:
             print("Please try again.")
             choice = input("Enter your choice: ")
 
-
     def see_supervisor_requests(self):
         print("Faculty: Seeing requests to be a supervisor")
 
