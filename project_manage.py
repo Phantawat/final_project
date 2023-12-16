@@ -26,8 +26,9 @@ def login():
     my_db = initializing()
     login_search = my_db.search('login')
     person_search = my_db.search('persons')
-    print(login_search)
     if login_search:
+        print('Welcome to Senior project managing program')
+        print("Login for letting me know who you are :D")
         username = input('Username: ')
         password = input('Password: ')
         while True:
@@ -54,6 +55,13 @@ def exit():
     myFile.close()
     myFile = open('Project_table.csv', 'r')
     myFile.close()
+
+
+def view_project_details():
+    print("Faculty: Seeing details of all projects")
+    my_db = initializing()
+    project_table = my_db.search('Project_table')
+    print(project_table)
 
 
 class Student:
@@ -83,7 +91,6 @@ class Student:
             while True:
                 if choice == '1':
                     person_table.update(self.student_id, 'role', 'lead')
-                    print(self.role)
                     LeadStudent.create_project(LeadStudent)
                     break
                 elif choice == '2':
@@ -94,23 +101,16 @@ class Student:
 
     def member_menu(self):
         print('Member Menu:')
-        self.view_project_details()
+        view_project_details()
 
     def respond_to_invitation(self):
         pass
-
-    def view_project_details(self):
-        my_db = DB()
-        project_table = my_db.search('Project_table')
-        print(project_table)
-
-    def submit_final_project_report(self):
-        print("Lead: Submitting final project report")
 
 
 class LeadStudent(Student):
     def __init__(self, val):
         super().__init__(val)
+        self.project_table = ProjectTable()
 
     def lead_menu(self):
         print('Lead Menu:')
@@ -136,7 +136,7 @@ class LeadStudent(Student):
                 self.add_members()
                 break
             elif choice == '5':
-                self.view_project_details()
+                view_project_details()
                 break
             elif choice == '6':
                 self.send_request_to_advisors()
@@ -154,7 +154,9 @@ class LeadStudent(Student):
         print("Lead: Sending request to advisors")
 
     def create_project(self):
-        print("Lead: Creating a project")
+        title = input("Enter project title: ")
+        self.project_table.add_project(title, self.student_id, '', '', '', '', '')
+        print("Lead: Project created successfully.")
 
     def find_members(self):
         print("Lead: Finding members")
@@ -162,10 +164,14 @@ class LeadStudent(Student):
     def add_members(self):
         print("Lead: Adding members to the project")
 
+    def submit_final_project_report(self):
+        print("Lead: Submitting final project report")
+
 
 class MemberStudent(Student):
     def __init__(self, val):
         super().__init__(val)
+
 
 class Faculty:
     def __init__(self, val):
@@ -173,6 +179,7 @@ class Faculty:
         self.role = val[2]
         self.name = val[1]
         self.projects = []
+        self.project_table = ProjectTable()
 
     def faculty_home(self):
         print(f'Welcome, {self.role} (Faculty ID: {self.faculty_id}, Name: {self.name})')
@@ -196,10 +203,10 @@ class Faculty:
                 self.send_response()
                 break
             elif choice == '3':
-                self.see_project_details()
+                view_project_details()
                 break
             elif choice == '4':
-                self.evaluate_projects()
+                self.evaluate_projects(self.project_table.table_name)
                 break
             print('Please try again.')
             choice = input('Enter your choice: ')
@@ -220,10 +227,10 @@ class Faculty:
                 self.send_response()
                 break
             elif choice == '3':
-                self.see_project_details()
+                view_project_details()
                 break
             elif choice == '4':
-                self.evaluate_projects()
+                self.evaluate_projects(self.project_table.table_name)
                 break
             elif choice == '5':
                 self.approve_project()
@@ -237,14 +244,26 @@ class Faculty:
     def send_response(self):
         print("Advisor: Sending accept response")
 
-    def see_project_details(self):
-        print("Faculty: Seeing details of all projects")
-
-    def evaluate_projects(self):
-        print("Faculty: Evaluating projects")
+    def evaluate_projects(self, project_id):
+        project = self.project_table.search('projects', project_id)
+        if project:
+            print(f"Project Details:\n{project}")
+            evaluation = input("Provide your evaluation comments: ")
+            print(f"Project status set to 'Evaluating'.")
+            self.project_table.update_status(project_id, 'Evaluating')
+            approval = input("Do you approve the project? (yes/no): ").lower()
+            if approval == 'yes':
+                print("Project approved.")
+                self.project_table.update_status(project_id, 'Approved')
+            else:
+                print("Project not approved.")
+                self.project_table.update_status(project_id, 'Not Approved')
+        else:
+            print("Project not found.")
 
     def approve_project(self):
         print("Advisor: Approving project")
+
 
 class Admin:
     def __init__(self, my_db):
@@ -277,12 +296,68 @@ class Admin:
         pass
 
 
+class ProjectTable(Table):
+    def __init__(self):
+        super().__init__('projects', [])
+
+    def add_project(self, title, lead, member1, member2, member3, member4, advisor):
+        project = {
+            'ProjectID': len(self.table) + 1,
+            'Title': title,
+            'Lead': lead,
+            'Member1': member1,
+            'Member2': member2,
+            'Member3': member3,
+            'Member4': member4,
+            'Advisor': advisor,
+            'Status': 'Pending'
+        }
+        self.table.append(project)
 
 
-# make calls to the initializing and login functions defined above
+class MemberPendingRequestTable(Table):
+    def __init__(self):
+        super().__init__('member_pending_request', [])
 
-initializing()
-my_db = DB()
+    def add_request(self, project_id, to_be_member):
+        request = {
+            'ProjectID': project_id,
+            'to_be_member': to_be_member,
+            'Response': None,
+            'Response_date': None
+        }
+        self.table.append(request)
+
+    def update_response(self, project_id, to_be_member, response, response_date):
+        for request in self.table:
+            if request['ProjectID'] == project_id and request['to_be_member'] == to_be_member:
+                request['Response'] = response
+                request['Response_date'] = response_date
+                break
+
+
+class AdvisorPendingRequestTable(Table):
+    def __init__(self):
+        super().__init__('advisor_pending_request', [])
+
+    def add_request(self, project_id, to_be_advisor):
+        request = {
+            'ProjectID': project_id,
+            'to_be_advisor': to_be_advisor,
+            'Response': None,
+            'Response_date': None
+        }
+        self.table.append(request)
+
+    def update_response(self, project_id, to_be_advisor, response, response_date):
+        for request in self.table:
+            if request['ProjectID'] == project_id and request['to_be_advisor'] == to_be_advisor:
+                request['Response'] = response
+                request['Response_date'] = response_date
+                break
+
+
+my_db = initializing()
 val = login()
 student = Student(val)
 admin = Admin(my_db)
@@ -290,16 +365,9 @@ faculty = Faculty(val)
 
 if val[2] == 'admin':
     admin.admin_home()
-elif val[2] == 'student':
+elif val[2] == 'student' or val[2] == 'member' or val[2] == 'lead':
     student.student_home()
-elif val[2] == 'member':
-    student.student_home()
-elif val[2] == 'lead':
-    student.student_home()
-elif val[2] == 'faculty':
-    faculty.faculty_home()
-elif val[2] == 'advisor':
+elif val[2] == 'faculty' or val[2] == 'advisor':
     faculty.faculty_home()
 
-# once everything is done, make a call to the exit function
-# exit()
+exit()

@@ -33,8 +33,6 @@ class DB:
         return None
 
 
-
-# add in code for a Table class
 class Table:
     def __init__(self, table_name, table):
         self.table_name = table_name
@@ -78,11 +76,16 @@ class Table:
         self.table.append(table)
 
     def update(self, person_id, item_key, new_item):
-        filtered_table = Table(self.table_name + '_filtered', [])
         for item in self.table:
             if item['ID'] == person_id:
                 item[item_key] = new_item
-                break
+        return self.table
+
+    def update_status(self, project_id, new_status):
+        for item in self.table:
+            if item['ProjectID'] == project_id:
+                item['Status'] = new_status
+        return self.table
 
     def __str__(self):
         return f'{self.table_name}:{str(self.table)}'
