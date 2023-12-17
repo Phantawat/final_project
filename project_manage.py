@@ -76,11 +76,16 @@ def exit():
     myFile.close()
 
 
-def view_project_details():
-    print("Faculty: Seeing details of all projects")
+
+def view_project_details(ID):
+    print("Seeing details of all projects")
     my_db = initializing()
-    project_table = my_db.search('Project_table')
-    print(project_table)
+    project_table = my_db.search('projects')
+    for item in project_table.table:
+        if item.values() == ID:
+            print(project_table)
+        else:
+            print('No projects')
 
 
 class Student:
@@ -119,7 +124,7 @@ class Student:
 
     def member_menu(self):
         print('Member Menu:')
-        view_project_details()
+        view_project_details(self.student_id)
 
     def respond_to_invitation(self):
         print("Student: Responding to invitations")
@@ -216,7 +221,7 @@ class LeadStudent(Student):
                 self.add_members_to_project()
                 break
             elif choice == '5':
-                view_project_details()
+                view_project_details(self.student_id)
                 break
             elif choice == '6':
                 self.send_request_to_advisors()
@@ -261,14 +266,13 @@ class LeadStudent(Student):
         advisor = input("Enter advisor ID: ")
         lead_student = LeadStudent([lead, {'first': '', 'last': ''}, 'lead'])
         project_id = lead_student.project_table.add_project(title, lead, advisor)
-        self.projects.append(project_id)
-        my_db = initializing()
-        person_table = my_db.search('persons')
-        person_updated = person_table.update(lead, 'type', 'lead')
+        my_db.search('persons').update(lead, 'type', 'lead')
+        lead_student.project_table.add_member(project_id, lead)
+        lead_student.project_table.send_advisor_invitation(project_id, advisor)
         print(f"Role of lead student with ID {lead} updated to 'lead'.")
-        print(self.projects)
+        print("Project created successfully.")
+        self.projects.append(project_id)
         lead_student.add_members_to_project()
-        print(person_updated)
         return my_db
 
     def add_members_to_project(self):
@@ -330,10 +334,10 @@ class Faculty:
                 self.see_supervisor_requests()
                 break
             elif choice == '2':
-                self.send_response()
+                self.handle_requests()
                 break
             elif choice == '3':
-                view_project_details()
+                view_project_details(self.faculty_id)
                 break
             elif choice == '4':
                 self.evaluate_projects(self.project_table.table_name)
@@ -344,7 +348,7 @@ class Faculty:
     def advisor_menu(self):
         print('Advisor Menu:')
         print('1. See Requests to Be a Supervisor')
-        print('2. Send Response')
+        print('2. See Requests to Be an Advisor')
         print('3. See Details of All Projects')
         print('4. Evaluate Projects')
         print('5. Approve Project')
@@ -354,10 +358,10 @@ class Faculty:
                 self.see_supervisor_requests()
                 break
             elif choice == '2':
-                self.send_response()
+                self.handle_requests()
                 break
             elif choice == '3':
-                view_project_details()
+                view_project_details(self.faculty_id)
                 break
             elif choice == '4':
                 self.evaluate_projects(self.project_table.table_name)
@@ -527,11 +531,6 @@ class Admin:
         print(f"User {username} removed successfully.")
 
 
-    def view_project_details(self):
-        project_table = my_db.search('projects')
-        print("Project Details:")
-        print(project_table)
-
     def add_member_to_project(self):
         print('Adding Member to Project...')
         project_id = input('Enter project ID: ')
@@ -565,7 +564,9 @@ class ProjectTable(Table):
             'Advisor': advisor,
             'Status': 'Pending'
         }
-        self.table.append(project)
+        project_table = my_db.search('projects')
+        project_table.table.insert(project)
+        self.table.insert(project_table)
         return project['ProjectID']
 
     def add_member(self, project_id, member_name):
