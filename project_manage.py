@@ -42,36 +42,38 @@ def login():
 
 
 def exit():
-    # project_key = ['ProjectID', 'Title', 'Lead', 'Member1', 'Member2', 'Member3', 'Member4', 'Advisor', 'Status']
-    # myFile = open('Project_table.csv', 'w')
-    # writer = csv.writer(myFile)
-    # writer.writerow(project_key)
-    # myFile.close()
-    # myFile = open('Project_table.csv', 'r')
-    # myFile.close()
-    #
-    # persons_key = ['ID', 'first', 'last', 'type']
-    # myFile1 = open('persons.csv', 'w')
-    # writer = csv.writer(myFile1)
-    # writer.writerow(persons_key)
-    # myFile1.close()
-    # myFile1 = open('persons.csv', 'r')
-    # myFile1.close()
-    #
-    # login_key = ['ID', 'username', 'password', 'type']
-    # myFile2 = open('login.csv', 'w')
-    # writer = csv.writer(myFile2)
-    # writer.writerow(login_key)
-    # myFile2.close()
-    # myFile2 = open('login.csv', 'r')
-    # myFile2.close()
+    project_key = ['ProjectID', 'Title', 'Lead', 'Member1', 'Member2', 'Member3', 'Member4', 'Advisor', 'Status']
+    project_table = my_db.search('projects')
+    project_value = [i.values() for i in project_table.table]
+    myFile = open('Project_table.csv', 'w', newline='')
+    writer = csv.writer(myFile)
+    writer.writerow(project_key)
+    writer.writerows(project_value)
+    myFile.close()
+    myFile = open('Project_table.csv', 'r', newline='')
+    myFile.close()
 
-    # persons_key = ['ID', 'first', 'last', 'type']
-    # persons_table = my_db.search('persons').table
-    # with open('persons.csv', 'a', newline='') as csvfile:
-    #     writer = csv.writer(csvfile)
-    #     writer.writerow(persons_table)
-    pass
+    login_key = ['ID', 'username', 'password', 'type']
+    login_table = my_db.search('login')
+    login_value = [i.values() for i in login_table.table]
+    myFile = open('login.csv', 'w', newline='')
+    writer = csv.writer(myFile)
+    writer.writerow(login_key)
+    writer.writerows(login_value)
+    myFile.close()
+    myFile = open('login.csv', 'r', newline='')
+    myFile.close()
+
+    persons_key = ['ID', 'first', 'last', 'type']
+    persons_table = my_db.search('persons')
+    persons_value = [i.values() for i in persons_table.table]
+    myFile = open('persons.csv', 'w', newline='')
+    writer = csv.writer(myFile)
+    writer.writerow(persons_key)
+    writer.writerows(persons_value)
+    myFile.close()
+    myFile = open('persons.csv', 'r', newline='')
+    myFile.close()
 
 
 def view_project_details():
@@ -159,6 +161,30 @@ class Student:
 
     def submit_final_project_report(self):
         print("Lead: Submitting final project report")
+
+    def add_members_to_project(self):
+        if not self.projects:
+            print("Error: No project ID is available.")
+            return
+        project_id = self.projects[0]
+        for i in range(1, 5):
+            member_id = input(f"Enter member {i} ID (or press Enter to skip): ")
+            if member_id:
+                member_name = self.find_member_id_by_name(member_id)
+                if member_name:
+                    self.project_table.add_member(project_id, member_name)
+                    print(f"Member {i} added with ID: {member_id}")
+                    my_db.search('persons').update(member_id, 'role', 'member')
+                else:
+                    print(f"Error: Member with name '{member_name}' not found.")
+
+    def find_member_id_by_name(self, member_name):
+        get_data = my_db.search('persons')
+        get_member = get_data.filter(lambda x: x['first'] == member_name)
+        if len(get_member.table) != 0:
+            return get_member.table[0]['ID']
+        else:
+            return None
 
 
 class LeadStudent(Student):
@@ -443,7 +469,7 @@ class Admin:
             elif choice == '2':
                 self.import_database()
                 break
-            print('Invalid choice. Please try again.')
+            print('Please try again.')
             choice = input('Enter your choice: ')
 
     def export_database(self):
@@ -636,9 +662,17 @@ while True:
         student.student_home()
     elif val[2] == 'faculty' or val[2] == 'advisor':
         faculty.faculty_home()
-    choice = input('Press (enter) exit (0) logout: ')
+    choice = input('Press (enter) exit (0) logout (1) back to menu: ')
     if choice.isspace() or choice == '':
         print("You're already exit the program.")
         exit()
         break
+    elif choice == '1':
+        if val[2] == 'admin':
+            admin.admin_home()
+        elif val[2] == 'student' or val[2] == 'member' or val[2] == 'lead':
+            student.student_home()
+        elif val[2] == 'faculty' or val[2] == 'advisor':
+            faculty.faculty_home()
+        choice = input('Press (enter) exit (0) logout (1) back to menu: ')
 
