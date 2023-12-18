@@ -177,7 +177,7 @@ class Student:
             if member_id:
                 member_name = self.find_member_id_by_name(member_id)
                 if member_name:
-                    self.project_table.add_member(project_id, member_name)
+                    self.projects.add_member(project_id, member_name)
                     print(f"Member {i} added with ID: {member_id}")
                     my_db.search('persons').update(member_id, 'role', 'member')
                 else:
@@ -478,9 +478,11 @@ class Admin:
 
     def export_database(self):
         print('Exporting Database to CSV...')
+        exit()
 
     def import_database(self):
         print('Importing Database from CSV...')
+        self.my_db = initializing()
 
     def manage_user(self):
         print("Admin: Managing User")
